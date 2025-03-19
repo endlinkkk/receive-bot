@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommand
 
 from config import settings
-from handlers import commands
+from handlers import commands, file_handlers
 
 bot_commands = [
     BotCommand(command="start", description="start command"),
@@ -17,6 +17,7 @@ async def setup_bot():
     dp = Dispatcher()
 
     dp.include_router(commands.router)
+    dp.include_router(file_handlers.router)
 
     await dp.start_polling(bot)
 
