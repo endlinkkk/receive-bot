@@ -8,6 +8,8 @@ class Greetings(TypedDict):
 class Errors(TypedDict):
     file_not_found: str
     invalid_format: str
+    general: str
+    download_failed: str
 
 
 class Instructions(TypedDict):
@@ -33,6 +35,8 @@ messages: Messages = {
     "errors": {
         "file_not_found": "Файл не найден. Пожалуйста, загрузите его снова.",
         "invalid_format": "Неверный формат файла. Пожалуйста, используйте Excel.",
+        "general": "Произошла ошибка во время обработки",
+        "download_failed": "Ошибка при загрузке файла",
     },
     "instructions": {
         "send_excel": "Пожалуйста, отправьте Excel-файл для обработки.",

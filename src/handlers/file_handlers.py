@@ -1,8 +1,11 @@
-from aiogram import F, Router
+from pathlib import Path
+
+from aiogram import Bot, F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import Message, ReplyKeyboardRemove
 
+from config import settings
 from dictionary import messages
 from keyboards.reply_factory import ReplyKeyboardFactory
 
@@ -27,8 +30,45 @@ async def preparing_to_send_a_file(message: Message, state: FSMContext):
 async def cancellation_of_sending(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(
-        text=messages["instructions"]["canceling_file_sending"], reply_markup=ReplyKeyboardRemove()
+        text=messages["instructions"]["canceling_file_sending"],
+        reply_markup=ReplyKeyboardRemove(),
     )
+
+
+async def _download_file(bot: Bot, file_id: str, file_name: str) -> Path:
+    try:
+        file = await bot.get_file(file_id)
+
+        upload_dir = Path(settings.UPLOAD_DIR).absolute()
+        upload_dir.mkdir(parents=True, exist_ok=True)
+
+        # Полный путь к файлу
+        file_path = upload_dir / file_name
+
+        await bot.download_file(file.file_path, destination=file_path)
+        return file_path
+    except Exception:
+        raise ValueError(messages["errors"]["download_failed"])
+
+
+@router.message(F.document)
+async def handle_excel_file(message: Message, state: FSMContext):
+    try:
+        if not message.document.file_name.endswith((".xlsx", ".xls")):
+            raise ValueError(messages["errors"]["invalid_format"])
+
+        file_path = await _download_file(
+            message.bot, message.document.file_id, Path(message.document.file_name).name
+        )
+        response = str(file_path.absolute())
+
+    except ValueError as e:
+        response = str(e)
+    except Exception:
+        response = messages["errors"]["general"]
+
+    await message.answer(text=response, reply_markup=ReplyKeyboardRemove())
+    await state.clear()
 
 
 @router.message(SendFile.waiting_for_file)
